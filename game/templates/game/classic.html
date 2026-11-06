@@ -1,0 +1,142 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block scripts %}
+<script src="{% static 'game/js/classic.js' %}?v=browser-progress-1" defer></script>
+{% endblock %}
+{% block content %}
+<main
+  class="parts"
+  id="main"
+  data-state-url="{% url 'game:classic' %}"
+  data-search-url="{% url 'game:player-search' %}"
+  data-guess-url="{% url 'game:guesses' %}"
+  data-fallback="{% static 'game/img/player-silhouette.svg' %}"
+  data-rifle-icon="{% static 'game/img/ak47.svg' %}"
+>
+  <section class="hero block" aria-labelledby="game-title">
+    <span class="eyebrow" id="challenge-label">DESAFIO DIÁRIO</span>
+    <h1 id="game-title">Quem está na sua mira?</h1>
+    <p class="sub">Adivinhe o profissional de Counter-Strike.<br>Cada tentativa revela uma nova pista.</p>
+    <div class="mode">CLÁSSICO</div>
+  </section>
+
+  <section class="searchblock block" aria-label="Escolha sua tentativa">
+    <form id="guess-form" class="searchline">
+      {% csrf_token %}
+      <label class="sr-only" for="player-search">Buscar jogador por nick ou nome</label>
+      <input
+        id="player-search"
+        type="text"
+        placeholder="Digite o nick do jogador…"
+        autocomplete="off"
+        maxlength="100"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded="false"
+        aria-controls="suggestions"
+        aria-describedby="search-feedback"
+        disabled
+      >
+      <button id="guess-submit" type="submit" disabled>Enviar ↵</button>
+    </form>
+    <ul
+      id="suggestions"
+      class="suggestions"
+      role="listbox"
+      aria-label="Jogadores encontrados"
+      hidden
+    ></ul>
+    <p id="search-feedback" class="feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <p id="game-message" class="game-message block" role="status" aria-live="polite">Carregando o desafio…</p>
+  <section id="victory" class="victory block" aria-labelledby="victory-title" hidden>
+    <h2 id="victory-title">Na mira, em cheio!</h2>
+    <p id="victory-summary"></p>
+  </section>
+
+  <section class="block" aria-label="Tentativas">
+    <div
+      class="board-scroll"
+      tabindex="0"
+      role="region"
+      aria-label="Tabela de tentativas; role horizontalmente para ver todas as características"
+    >
+      <table class="board">
+        <caption class="sr-only">Tentativas, da mais recente para a mais antiga</caption>
+        <colgroup>
+          <col class="player-col">
+          <col>
+          <col>
+          <col>
+          <col>
+          <col>
+          <col class="activity-col">
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th scope="col">Jogador</th>
+            <th scope="col">Nacionalidade</th>
+            <th scope="col">Status</th>
+            <th scope="col">Time atual</th>
+            <th scope="col">Funções</th>
+            <th scope="col">Campeão de Major</th>
+            <th scope="col">Atividade</th>
+          </tr>
+        </thead>
+
+        <tbody id="guesses"></tbody>
+      </table>
+    </div>
+    <p id="empty-board" class="empty-board">Escolha um jogador para começar.</p>
+  </section>
+
+  <section class="legend block" aria-label="Legenda das comparações">
+    <span><i class="swatch correct" aria-hidden="true"></i>Correto</span>
+    <span><i class="swatch partial" aria-hidden="true"></i>Em comum</span>
+    <span><i class="swatch incorrect" aria-hidden="true"></i>Diferente</span>
+    <span>↑ Depois · ↓ Antes</span>
+  </section>
+
+  <footer class="footer block">
+    <span>Próximo desafio em</span>
+    <strong id="countdown" role="timer" aria-label="Tempo até o próximo desafio">--:--:--</strong>
+    <span>Feito para quem vive Counter-Strike.</span>
+  </footer>
+
+  <noscript><p class="game-message">Ative o JavaScript para buscar jogadores e enviar tentativas.</p></noscript>
+</main>
+{% endblock %}
+{% block dialogs %}
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <div class="dialog-heading"><h2 id="help-title">Como jogar</h2><button id="help-close" type="button" aria-label="Fechar ajuda">×</button></div>
+  <p>Acerte o profissional de Counter-Strike do dia. O desafio é o mesmo para todos e muda à meia-noite de <strong>America/Fortaleza</strong>. Você tem tentativas ilimitadas.</p>
+  <p>Busque por nick ou nome, selecione uma sugestão e envie. Use ↑ e ↓ para navegar nas sugestões, Enter para selecionar e Escape para fechar.</p>
+  <dl>
+    <dt>Jogador</dt>
+    <dd>O acerto depende da identidade do jogador, mesmo quando dois nicks são iguais.</dd>
+
+    <dt>Nacionalidade e funções</dt>
+    <dd>Verde: conjuntos iguais. Amarelo: ao menos um item em comum. Vermelho: nenhum item em comum.</dd>
+
+    <dt>Status</dt>
+    <dd>Ativo, inativo, aposentado ou desconhecido: descreve a carreira, não a posição no elenco.</dd>
+
+    <dt>Time atual</dt>
+    <dd>Compara o nome da equipe. Sem equipe aparece como “No team”. Dois jogadores sem equipe correspondem.</dd>
+
+    <dt>Funções</dt>
+    <dd><img class="role-icon" src="{% static 'game/img/ak47.svg' %}" alt=""> Rifle · 🎯 AWP · 🧠 IGL. Um jogador pode ter mais de uma função.</dd>
+
+    <dt>Campeão de Major</dt>
+    <dd>Compara Sim ou Não. Dois jogadores que não venceram também correspondem.</dd>
+
+    <dt>Atividade</dt>
+    <dd>Início e fim são comparados separadamente. ↑ indica ano secreto posterior; ↓, anterior. “Present” significa em andamento, sem substituir pelo ano atual. ∞ indica que o período secreto segue em andamento; ■, que tem fim definido. ✓ indica correspondência.</dd>
+
+  </dl>
+  <p>As cores seguem a legenda abaixo da tabela. As pistas não mostram os anos secretos. Suas tentativas ficam somente neste navegador. Limpar os cookies apaga seu progresso.</p>
+  <p class="credits">Ícone AK47 por <a href="https://game-icons.net/1x1/skoll/ak47.html" target="_blank" rel="noopener noreferrer">Skoll / Game-icons.net</a>, <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a>. Cor adaptada na referência aprovada.</p>
+</dialog>
+{% endblock %}

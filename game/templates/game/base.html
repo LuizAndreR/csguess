@@ -1,0 +1,28 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101318">
+    <meta
+      name="description"
+      content="Adivinhe o profissional de Counter-Strike. Um desafio diário, novas pistas a cada tentativa."
+    >
+    <title>{% block title %}CSGuess — Clássico{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'game/css/classic.css' %}">
+    {% block scripts %}{% endblock %}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Pular para o jogo</a>
+    <div class="screen">
+      <header class="sitebar">
+        <a class="logo" href="{% url 'game:home' %}" aria-label="CSGuess, início">CS<b>Guess</b><span>COUNTER-STRIKE DAILY</span></a>
+        <button id="help-open" type="button" aria-label="Ajuda: como jogar" aria-haspopup="dialog">?</button>
+      </header>
+
+      {% block content %}{% endblock %}
+    </div>
+    {% block dialogs %}{% endblock %}
+  </body>
+</html>

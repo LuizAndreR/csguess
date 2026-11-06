@@ -1,0 +1,7 @@
+[Unit]
+Description=Garantir desafio diário CSGuess
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Documentos/Projetos/csguess
+ExecStart=/usr/bin/docker compose exec -T web python manage.py ensure_daily_challenge

@@ -1,0 +1,5 @@
+# Instalar no crontab do usuário com acesso ao Docker. Ajuste o caminho do projeto.
+# Executa em cada minuto, incluindo 00:00 America/Fortaleza, independentemente
+# do fuso do cron do host. O serviço Django determina a data em Fortaleza.
+# Retenta depois de indisponibilidade, sem preencher datas passadas.
+* * * * * cd /home/luiz-andre/Documentos/Projetos/csguess && /usr/bin/docker compose exec -T web python manage.py ensure_daily_challenge >> /home/luiz-andre/Documentos/Projetos/csguess/daily-challenge.log 2>&1

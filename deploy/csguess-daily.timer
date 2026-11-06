@@ -1,0 +1,11 @@
+[Unit]
+Description=CSGuess: meia-noite de Fortaleza e recuperação a cada minuto
+
+[Timer]
+OnCalendar=*-*-* *:*:00 America/Fortaleza
+Persistent=true
+AccuracySec=1s
+Unit=csguess-daily.service
+
+[Install]
+WantedBy=timers.target
