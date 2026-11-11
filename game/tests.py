@@ -540,6 +540,7 @@ import shutil
 import tempfile
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import quote
 
 from django.test import override_settings
 
@@ -563,14 +564,16 @@ class LogoSettingsMixin:
         self.addCleanup(override.disable)
         self._Image, self._Draw = Image, ImageDraw
 
-    def make_team(self, name, logo=True, photo="https://liquipedia.net/commons/images/x/xx/Secret_Team_darkmode.png"):
+    def make_team(self, name, logo=True, photo=None):
+        if photo is None:
+            photo = f"https://liquipedia.net/commons/images/x/xx/{quote(name)}_darkmode.png"
         team = Team.objects.create(name=name, photo_url=photo)
         if logo:
             image = self._Image.new("RGBA", (300, 200), (0, 0, 0, 0))
             draw = self._Draw.Draw(image)
             for i in range(0, 300, 20):
                 draw.rectangle([i, 0, i + 9, 199], fill=(255, 120 + i % 100, 0, 255))
-            image.save(logo_path(team.pk))
+            image.save(logo_path(team))
         return team
 
 
@@ -594,7 +597,7 @@ class LogoRenderTests(LogoSettingsMixin, TestCase):
     def test_each_level_is_sharper_than_the_previous(self):
         from PIL import Image, ImageChops, ImageStat
         team = self.make_team("FURIA")
-        images = [Image.open(BytesIO(render_logo(team.pk, i))).convert("L") for i in range(len(BLUR_RADII))]
+        images = [Image.open(BytesIO(render_logo(team, i))).convert("L") for i in range(len(BLUR_RADII))]
         self.assertTrue(all(img.size == (480, 300) for img in images))
         # Contraste local (desvio padrão) só aumenta conforme o desfoque diminui.
         deviations = [ImageStat.Stat(img).stddev[0] for img in images]
@@ -603,14 +606,14 @@ class LogoRenderTests(LogoSettingsMixin, TestCase):
 
     def test_render_is_png_and_cached(self):
         team = self.make_team("FURIA")
-        first = render_logo(team.pk, 0)
+        first = render_logo(team, 0)
         self.assertTrue(first.startswith(b"\x89PNG"))
-        self.assertIs(render_logo(team.pk, 0), first)
+        self.assertIs(render_logo(team, 0), first)
 
     def test_missing_file_raises_oserror(self):
         team = self.make_team("FURIA", logo=False)
         with self.assertRaises(OSError):
-            render_logo(team.pk, 0)
+            render_logo(team, 0)
 
 
 class LogoChallengeTests(LogoSettingsMixin, TestCase):
@@ -720,18 +723,18 @@ class LogoAPITests(LogoSettingsMixin, TestCase):
         self.client.get(reverse("game:logo"))
         response = self.image()
         self.assertEqual((response.status_code, response["Content-Type"]), (200, "image/png"))
-        self.assertEqual(response.content, render_logo(self.secret.pk, 0))
-        self.assertNotEqual(response.content, render_logo(self.secret.pk, len(BLUR_RADII) - 1))
+        self.assertEqual(response.content, render_logo(self.secret, 0))
+        self.assertNotEqual(response.content, render_logo(self.secret, len(BLUR_RADII) - 1))
         self.assertEqual(response["Cache-Control"], "no-store")
         self.assertNotIn(self.SECRET, "".join(f"{k}:{v}" for k, v in response.items()))
 
     def test_image_without_cookie_is_still_blurred(self):
-        self.assertEqual(self.image().content, render_logo(self.secret.pk, 0))
+        self.assertEqual(self.image().content, render_logo(self.secret, 0))
 
     def test_tampered_cookie_does_not_unblur(self):
         self.client.get(reverse("game:logo"))
         self.client.cookies["csguess_logo_progress"] = "adulterado"
-        self.assertEqual(self.image().content, render_logo(self.secret.pk, 0))
+        self.assertEqual(self.image().content, render_logo(self.secret, 0))
 
     def test_wrong_guess_never_reveals_secret(self):
         self.client.get(reverse("game:logo"))
@@ -750,7 +753,7 @@ class LogoAPITests(LogoSettingsMixin, TestCase):
         self.assertEqual(self.image().content, first)  # 9 tentativas: ainda no nível 0
         tenth = self.guess(self.others[9].pk).json()
         self.assertEqual((tenth["blur_level"], tenth["attempts_to_next_level"]), (1, 10))
-        self.assertEqual(self.image().content, render_logo(self.secret.pk, 1))
+        self.assertEqual(self.image().content, render_logo(self.secret, 1))
         self.assertNotEqual(self.image().content, first)
 
     def test_victory_reveals_sharp_logo_and_restores(self):
@@ -760,7 +763,7 @@ class LogoAPITests(LogoSettingsMixin, TestCase):
         body = win.json()
         self.assertEqual((win.status_code, body["correct"], body["state"]), (201, True, "completed"))
         self.assertEqual(body["victory"], {"team": {"id": self.secret.pk, "name": self.SECRET}, "attempts": 2})
-        self.assertEqual(self.image().content, render_logo(self.secret.pk, len(BLUR_RADII) - 1))
+        self.assertEqual(self.image().content, render_logo(self.secret, len(BLUR_RADII) - 1))
         self.assertEqual(self.guess(self.others[1].pk).json()["error"]["code"], "match_completed")
 
         restored = self.client.get(reverse("game:logo")).json()

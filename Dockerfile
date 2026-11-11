@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && useradd --uid 10001 --gid csguess --no-create-home csguess
 
 COPY --chown=csguess:csguess . .
-RUN mkdir -p /app/staticfiles && chown csguess:csguess /app/staticfiles
+RUN mkdir -p /app/staticfiles /app/game/team_logos \
+    && chown csguess:csguess /app/staticfiles /app/game/team_logos
 USER csguess
 EXPOSE 8000
 ENTRYPOINT ["/bin/sh", "/app/deploy/web-entrypoint.sh"]

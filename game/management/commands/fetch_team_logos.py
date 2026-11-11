@@ -1,4 +1,4 @@
-"""Baixa os logos de Team.photo_url para game/team_logos/<id>.png (reduzidos)."""
+"""Baixa os logos de Team.photo_url para game/team_logos/<hash da URL>.png (reduzidos)."""
 from io import BytesIO
 import time
 import urllib.error
@@ -29,7 +29,7 @@ class Command(BaseCommand):
         done = skipped = 0
         failures = []
         for team in Team.objects.exclude(photo_url="").order_by("pk"):
-            path = logo_path(team.pk)
+            path = logo_path(team)
             if path.exists() and not options["force"]:
                 skipped += 1
                 continue

@@ -4,6 +4,7 @@ O logo original nunca sai do servidor: a tela só recebe a versão embaçada do 
 correspondente ao progresso (cookie assinado). Ao acertar, recebe a imagem nítida.
 """
 from functools import lru_cache
+import hashlib
 from io import BytesIO
 import logging
 from datetime import timedelta
@@ -34,15 +35,20 @@ class NoEligibleTeams(Exception):
     pass
 
 
-def logo_path(team_id):
-    return Path(settings.TEAM_LOGO_DIR) / f"{team_id}.png"
+def logo_path(team):
+    """Arquivo local do logo, nomeado pelo hash da photo_url.
+
+    Independe do ID da equipe: recriar o banco ou trocar a URL nunca aponta para o arquivo errado.
+    """
+    digest = hashlib.sha256(team.photo_url.encode()).hexdigest()[:20]
+    return Path(settings.TEAM_LOGO_DIR) / f"{digest}.png"
 
 
 # Só participam equipes com foto cadastrada e o arquivo local já baixado.
 def eligible_teams(queryset=None):
     if queryset is None:
         queryset = Team.objects.all()
-    return [team for team in queryset.exclude(photo_url="").order_by("pk") if logo_path(team.pk).is_file()]
+    return [team for team in queryset.exclude(photo_url="").order_by("pk") if logo_path(team).is_file()]
 
 
 def blur_index(attempts, solved=False):
@@ -72,8 +78,8 @@ def _render(path, mtime_ns, index):
     return output.getvalue()
 
 
-def render_logo(team_id, index):
-    path = logo_path(team_id)
+def render_logo(team, index):
+    path = logo_path(team)
     return _render(str(path), path.stat().st_mtime_ns, index)
 
 

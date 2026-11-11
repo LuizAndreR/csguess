@@ -99,7 +99,7 @@ def image(request):
     teams = progress(request, challenge) or []
     index = blur_index(len(teams), challenge.secret_team_id in teams)
     try:
-        content = render_logo(challenge.secret_team_id, index)
+        content = render_logo(challenge.secret_team, index)
     except OSError:
         raise APIError("image_unavailable", "Imagem indisponível no momento.", 503)
     return HttpResponse(content, content_type="image/png")

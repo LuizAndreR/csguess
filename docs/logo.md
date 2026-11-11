@@ -16,7 +16,7 @@ da equipe secreta antes da vitória, e a URL da imagem não contém o ID da equi
 ## Logos locais
 
 `Team.photo_url` guarda o link de origem (Liquipedia). Para o jogo, os arquivos são baixados
-uma vez e reduzidos (lado maior de 600 px) em `game/team_logos/<id>.png`, fora de `static/`
+uma vez e reduzidos (lado maior de 600 px) em `game/team_logos/<hash da URL>.png`, fora de `static/`
 para não ficarem públicos (o nome do arquivo original revelaria a equipe).
 
 ```bash
@@ -26,7 +26,11 @@ python manage.py fetch_team_logos --force   # refaz todos
 
 Só participam do sorteio e da busca as equipes com `photo_url` preenchido **e** arquivo local.
 Ao cadastrar uma equipe nova ou trocar a foto, rode o comando (use `--force` para substituir).
-O diretório precisa estar na imagem Docker (ele é copiado com o código).
+O nome do arquivo é o hash da `photo_url`, então recriar o banco (IDs novos) ou trocar a URL
+nunca aponta para o logo errado: a URL nova simplesmente baixa um arquivo novo.
+O diretório não é versionado nem entra na imagem; no Docker é um volume (`team_logos`) e o
+`web-entrypoint.sh` roda `fetch_team_logos` a cada start (baixa só o que falta; falha de rede
+não impede o site de subir).
 
 ## Desafio diário
 
