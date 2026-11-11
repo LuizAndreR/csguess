@@ -116,6 +116,12 @@ implementado no Django; o controle de tráfego fica na hospedagem. As rotas JSON
 continuam acessíveis por HTTP diretamente, além do uso pelo front-end. CSRF,
 validação de entradas e cookies assinados permanecem ativos.
 
+As dicas do clássico são opcionais: após 10 erros, o botão de nacionalidade é
+liberado; após 15 erros, o de time atual. Os botões mostram quantas tentativas
+faltam e revelam a dica abaixo somente ao clicar. O desbloqueio é validado no
+servidor usando o progresso do próprio navegador. Veja o contrato em
+[dicas da API](docs/classic.md#dicas-após-10-e-15-erros).
+
 Os testes comuns não exigem navegador. Os testes opcionais em Chrome usam
 Playwright apenas como ferramenta de desenvolvimento e PostgreSQL de testes,
 sem alterar a resposta real do dia:
@@ -124,12 +130,12 @@ sem alterar a resposta real do dia:
 # No host, com ambiente Python e PostgreSQL disponíveis
 .venv/bin/python -m pip install --target /tmp/csguess-browser-runtime playwright
 PYTHONPATH=/tmp/csguess-browser-runtime CSGUESS_BROWSER_TESTS=1 \
-  .venv/bin/python manage.py test game.test_browser --noinput
+  .venv/bin/python manage.py test game.test_hints_browser --noinput
 ```
 
 Por padrão usa `/opt/google/chrome/chrome`; ajuste `CSGUESS_CHROME_PATH` se necessário.
 Não é dependência da aplicação nem exige Node. Os testes geram capturas em
-`/tmp/csguess-desktop.png` e `/tmp/csguess-mobile.png`. Créditos do ícone AK-47 em
+`/tmp/csguess-hints-desktop.png` e `/tmp/csguess-hints-mobile.png`. Créditos do ícone AK-47 em
 [docs/assets.md](docs/assets.md) e na ajuda da tela.
 
 ## Tecnologias
