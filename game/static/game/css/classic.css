@@ -603,3 +603,68 @@ dd {
     transition: background-color .15s
   }
 }
+
+/* Navegação entre os modos de jogo. */
+.modes {
+  display: flex;
+  gap: 4px;
+  margin-left: auto
+}
+
+.modes a {
+  color: #a9b4c3;
+  text-decoration: none;
+  padding: 10px 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center
+}
+
+.modes a:hover {
+  color: #e9edf4
+}
+
+.modes a[aria-current=page] {
+  color: #e9edf4;
+  border-bottom-color: var(--cg-orange)
+}
+
+@media (max-width: 640px) {
+  .sitebar {
+    flex-wrap: wrap
+  }
+
+  .modes {
+    order: 3;
+    width: 100%;
+    margin-left: 0
+  }
+}
+
+/* Botão para o outro modo, na tela principal. */
+.mode-switch {
+  margin: 14px 0 0
+}
+
+.mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  color: #e9edf4;
+  background: #252c36;
+  border: 1px solid #404956;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none
+}
+
+.mode-button:hover {
+  border-color: var(--cg-orange);
+  color: var(--cg-orange)
+}

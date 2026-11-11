@@ -1,0 +1,75 @@
+/* Modo Logo: complementa classic.css. */
+.logo-stage {
+  margin-top: 0;
+  margin-bottom: 25px;
+  text-align: center
+}
+
+.logo-stage img {
+  display: block;
+  width: 480px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  margin: 0 auto;
+  background: var(--cg-surface);
+  border: 1px solid #333b47;
+  border-radius: var(--cg-radius)
+}
+
+.logo-loading {
+  color: #a9b4c3;
+  margin: 0
+}
+
+.blur-note {
+  margin-top: 10px;
+  color: #a9b4c3;
+  font-size: 12px;
+  min-height: 1.4em
+}
+
+.guess-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px
+}
+
+.guess-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #333b47;
+  border-radius: var(--cg-radius)
+}
+
+.guess-list li.correct {
+  background: #295842;
+  border-color: #407758
+}
+
+.guess-list li.incorrect {
+  background: #522d35;
+  border-color: #7a4450
+}
+
+.guess-list .number {
+  color: #c7d0dc;
+  font-size: 12px;
+  min-width: 2.5ch
+}
+
+.guess-list strong {
+  flex: 1
+}
+
+.guess-list .verdict {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase
+}

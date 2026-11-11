@@ -221,3 +221,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Dumps de jogadores (CSV) não são versionados
+game_player_*.csv

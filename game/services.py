@@ -70,7 +70,7 @@ def eligible_players(queryset=None):
     if queryset is None:
         queryset = Player.objects.order_by("pk")
 
-    for player in queryset.iterator():
+    for player in queryset.select_related("team").iterator():
         try:
             data = player_snapshot(player)
         except (ValueError, ValidationError, TypeError, AttributeError) as exc:

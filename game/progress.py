@@ -6,13 +6,13 @@ COOKIE_SALT = "game.classic.progress.v1"
 COOKIE_MAX_AGE = 14 * 24 * 60 * 60
 
 
-def read_progress(request, challenge):
-    value = request.COOKIES.get(COOKIE_NAME)
+def read_progress(request, challenge, cookie=COOKIE_NAME, salt=COOKIE_SALT):
+    value = request.COOKIES.get(cookie)
     if not value:
         return None
 
     try:
-        progress = signing.loads(value, salt=COOKIE_SALT, max_age=COOKIE_MAX_AGE)
+        progress = signing.loads(value, salt=salt, max_age=COOKIE_MAX_AGE)
     except (signing.BadSignature, ValueError, TypeError):
         return None
 
@@ -28,15 +28,15 @@ def read_progress(request, challenge):
     return players
 
 
-def write_progress(response, request, challenge, players):
+def write_progress(response, request, challenge, players, cookie=COOKIE_NAME, salt=COOKIE_SALT):
     # O cookie contém apenas o desafio público e os IDs já tentados, nunca a resposta.
     value = signing.dumps(
         {"challenge": str(challenge.public_id), "players": players},
-        salt=COOKIE_SALT,
+        salt=salt,
         compress=True
     )
     response.set_cookie(
-        COOKIE_NAME,
+        cookie,
         value,
         max_age=COOKIE_MAX_AGE,
         httponly=True,

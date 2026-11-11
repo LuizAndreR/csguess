@@ -3,8 +3,31 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from .normalization import normalize_team
+from .normalization import NO_TEAM
 from .validators import validate_nationalities, validate_roles
+
+
+class Team(models.Model):
+    name = models.CharField("nome", max_length=255, unique=True)
+    photo_url = models.URLField("URL da foto", max_length=4096, blank=True)
+
+    class Meta:
+        verbose_name = "equipe"
+        verbose_name_plural = "equipes"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        super().clean()
+        self.name = (self.name or "").strip()
+        if self.name.casefold() == NO_TEAM.casefold():
+            raise ValidationError({"name": f"“{NO_TEAM}” é reservado; deixe o jogador sem equipe."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean(validate_unique=False, validate_constraints=False)
+        return super().save(*args, **kwargs)
 
 
 class Player(models.Model):
@@ -28,11 +51,13 @@ class Player(models.Model):
         choices=CareerStatus,
         default=CareerStatus.UNKNOWN
     )
-    current_team = models.CharField(
-        "equipe atual",
-        max_length=255,
+    team = models.ForeignKey(
+        Team,
+        verbose_name="equipe atual",
+        null=True,
         blank=True,
-        default="No team"
+        on_delete=models.PROTECT,
+        related_name="players"
     )
     roles = models.JSONField(
         "funções",
@@ -72,6 +97,11 @@ class Player(models.Model):
     def __str__(self):
         return self.nick
 
+    @property
+    def current_team(self):
+        """Nome da equipe atual; jogador sem equipe retorna "No team"."""
+        return self.team.name if self.team_id else NO_TEAM
+
     def clean(self):
         super().clean()
         errors = {}
@@ -92,8 +122,8 @@ class Player(models.Model):
 
         if type(self.is_major_winner) is not bool:
             errors["is_major_winner"] = ["Informe um booleano real."]
-        if self.career_status == "retired" and self.current_team != "No team":
-            errors["current_team"] = ["Aposentado deve ter equipe No team."]
+        if self.career_status == "retired" and self.team_id is not None:
+            errors["team"] = ["Aposentado deve ficar sem equipe."]
 
         if errors:
             raise ValidationError(errors)
@@ -101,8 +131,6 @@ class Player(models.Model):
         self.nationalities = [code.upper() for code in self.nationalities]
 
     def full_clean(self, *args, **kwargs):
-        self.current_team = normalize_team(self.current_team)
-
         if type(self.is_major_winner) is not bool:
             raise ValidationError({"is_major_winner": "Informe um booleano real."})
         return super().full_clean(*args, **kwargs)
@@ -118,4 +146,12 @@ class DailyChallenge(models.Model):
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     secret_player = models.ForeignKey(Player, on_delete=models.PROTECT)
     secret_snapshot = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+# Um desafio de logo por data: a equipe secreta é só uma referência (não há snapshot).
+class TeamChallenge(models.Model):
+    date = models.DateField(unique=True)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    secret_team = models.ForeignKey(Team, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)

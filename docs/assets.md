@@ -8,3 +8,6 @@
   Exibido em 20 × 20 px. Crédito também disponível na ajuda do jogo.
 - `player-silhouette.svg`: silhueta extraída do mesmo protótipo.
 - Não se reutilizam as fotos embutidas nem os jogadores demonstrativos do protótipo.
+- `game/team_logos/`: logos das equipes baixados da [Liquipedia](https://liquipedia.net/counterstrike/)
+  (CC BY-SA 3.0) por `manage.py fetch_team_logos`; marcas dos respectivos donos.
+  Usados só pelo modo Logo, sempre desfocados até o acerto. Veja [logo.md](logo.md).

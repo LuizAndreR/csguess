@@ -10,8 +10,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
 from django.utils import timezone
 
-from game.models import Player
-from game.normalization import normalize_team
+from game.models import Player, Team
+from game.normalization import NO_TEAM, normalize_team
 
 
 FIELDS = {"nick", "name", "nationalities", "career_status", "current_team", "roles", "years_active",
@@ -49,7 +49,7 @@ def parse_document(document):
         identities.add(identity)
         row = dict(row)
         row["current_team"] = normalize_team(row["current_team"])
-        if row["career_status"] == "retired" and row["current_team"] != "No team":
+        if row["career_status"] == "retired" and row["current_team"] != NO_TEAM:
             raise CommandError(f"{prefix}: aposentado deve ter current_team No team")
         if not isinstance(row["roles"], list) or any(not isinstance(role, str) for role in row["roles"]):
             raise CommandError(f"{prefix}: roles deve ser lista de strings")
@@ -114,11 +114,23 @@ class Command(BaseCommand):
                 query = Player.objects if options["dry_run"] else Player.objects.select_for_update()
                 existing = query.filter(source=values["source"], source_id=values["source_id"]).first()
                 instance = existing or Player()
-                changed = any(getattr(instance, field) != value for field, value in values.items())
+                values = dict(values)
+                team_name = values.pop("current_team")
+                team = None
+                if team_name != NO_TEAM:
+                    team = Team.objects.filter(name=team_name).first()
+                    if team is None:
+                        team = Team(name=team_name)
+                        if not options["dry_run"]:
+                            team.save()
+                changed = (instance.current_team != team_name
+                           or any(getattr(instance, field) != value for field, value in values.items()))
                 for field, value in values.items():
                     setattr(instance, field, value)
+                instance.team = team
                 try:
-                    instance.full_clean()
+                    # Na simulação a equipe nova não existe no banco; ela é validada ao criar.
+                    instance.full_clean(exclude=["team"] if team is not None and team.pk is None else None)
                 except ValidationError as exc:
                     raise CommandError(f"{values['source']} / {values['source_id']}: {exc.message_dict}") from exc
                 action = "created" if existing is None else "updated" if changed else "unchanged"

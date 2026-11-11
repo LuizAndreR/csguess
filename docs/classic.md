@@ -54,11 +54,18 @@ preserva a resposta do desafio já sorteado. Ela fica no servidor até o acerto.
 A migração 0006 não altera esse campo, os jogadores, os desafios, o histórico de
 sorteios ou o cookie de progresso. Não há alteração no bloqueio de sete dias.
 
-`current_team` tem `default="No team"`, `null=False`; `full_clean`/`save`, importação,
-snapshot e comparação normalizam null, vazio e espaços para esse valor. Nomes de
-equipe não vazios são preservados. Aposentados devem ter `No team`; cadastro e
-importação rejeitam equipe válida associada a aposentado. A migração 0004 corrige
-ausências e equipes de aposentados existentes, sem alterar os demais atributos.
+A equipe atual é a relação `Player.team` (chave estrangeira opcional para `Team`, com
+`on_delete=PROTECT`). `Team` tem `id`, `name` (único, sem espaços nas pontas; o nome
+`No team` é reservado) e `photo_url`. Sem equipe (`team` nulo) o jogador aparece como
+`No team`. Vários jogadores compartilham a mesma equipe, e renomear ou trocar a foto de
+uma equipe vale para todos. Aposentados devem ficar sem equipe; cadastro e importação
+rejeitam equipe associada a aposentado. A propriedade `Player.current_team` devolve o
+nome (ou `No team`) e é o valor usado no snapshot e na comparação, então o contrato
+JSON da API e os snapshots já gravados em `secret_snapshot` não mudaram. A importação
+JSON v2 continua usando o campo texto `current_team` e cria/reutiliza a `Team` pelo nome.
+A migração 0009 copiou os textos existentes para `Team`; a 0010 removeu a coluna antiga.
+Para trocar um jogador de time, edite o campo Equipe no Admin (ou reimporte); não é
+necessário apagar equipes. Equipes com jogadores não podem ser removidas.
 Como no Django, operações bulk/update ignoram validadores; devem validar antes.
 
 ## Progresso somente no navegador e CSRF
