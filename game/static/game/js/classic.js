@@ -46,6 +46,9 @@
     retryDelay = 5000,
     clockOffset = 0,
     rolloverRequested = null;
+  let hintData = {},
+    hintGame = null;
+  const revealedHints = new Set();
 
   // Montagem segura dos elementos: os dados externos entram como texto.
   function element(tag, className, text) {
@@ -368,6 +371,43 @@
       `Você acertou ${summary.player.nick} em ${summary.attempts} ${summary.attempts === 1 ? "tentativa" : "tentativas"}. Volte no próximo desafio!`;
   }
 
+  // O servidor libera as dicas; o clique decide quando mostrá-las na tela.
+  function showHints(hints = {}, game = null) {
+    if (game?.challenge_id !== hintGame?.challenge_id) revealedHints.clear();
+    hintData = hints;
+    hintGame = game;
+    const playing = game?.state === "in_progress";
+    $("game-hints").hidden = !playing;
+
+    for (const [key, field, threshold] of [
+      ["nationality", "nationalities", 10],
+      ["team", "current_team", 15]
+    ]) {
+      const unlocked = playing && Object.hasOwn(hints, field);
+      const revealed = unlocked && revealedHints.has(key);
+      const button = $(`${key}-hint-button`);
+      const remaining = Math.max(0, threshold - (game?.guesses.length || 0));
+      button.disabled = !unlocked;
+      button.setAttribute("aria-expanded", String(revealed));
+      $(`${key}-hint-status`).textContent = unlocked
+        ? (revealed ? "Clique para ocultar" : "Clique para revelar")
+        : `Mais ${remaining} ${remaining === 1 ? "tentativa" : "tentativas"} para desbloquear`;
+      $(`${key}-hint`).hidden = !revealed;
+    }
+
+    $("nationality-hint-value").replaceChildren(...(playing && revealedHints.has("nationality") && hints.nationalities
+      ? [countries(hints.nationalities)] : []));
+    $("team-hint-value").textContent = playing && revealedHints.has("team") ? (hints.current_team || "") : "";
+  }
+
+  for (const key of ["nationality", "team"]) {
+    $(`${key}-hint-button`).addEventListener("click", () => {
+      if (revealedHints.has(key)) revealedHints.delete(key);
+      else revealedHints.add(key);
+      showHints(hintData, hintGame);
+    });
+  }
+
   function scheduleRetry() {
     clearTimeout(retryTimer);
     retryTimer = setTimeout(() => loadState(), retryDelay);
@@ -400,6 +440,7 @@
         `DESAFIO DIÁRIO · ${data.challenge_date.split("-").reverse().join("/")}`;
       renderGuesses(data.guesses);
       showVictory(data.victory);
+      showHints(data.hints, data);
       message.textContent = notice || "";
       setControls();
       tick();
@@ -446,6 +487,7 @@
       challenge.state = data.state;
       renderGuesses(challenge.guesses);
       showVictory(data.victory);
+      showHints(data.hints, challenge);
       input.value = "";
       selected = null;
       feedback.textContent = "";
@@ -461,6 +503,7 @@
         if (error.code === "challenge_changed") {
           renderGuesses([]);
           showVictory(null);
+          showHints();
         }
         await loadState(error.message);
       } else if (!error.status || error.status >= 500) {
@@ -493,6 +536,7 @@
       clearSelection();
       renderGuesses([]);
       showVictory(null);
+      showHints();
       loadState("Um novo dia começou. Carregando o desafio…");
     }
   }

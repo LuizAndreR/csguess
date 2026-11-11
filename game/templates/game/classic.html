@@ -1,7 +1,7 @@
 {% extends "game/base.html" %}
 {% load static %}
 {% block scripts %}
-<script src="{% static 'game/js/classic.js' %}?v=browser-progress-1" defer></script>
+<script src="{% static 'game/js/classic.js' %}?v=classic-hints-2" defer></script>
 {% endblock %}
 {% block content %}
 <main
@@ -53,6 +53,28 @@
   <section id="victory" class="victory block" aria-labelledby="victory-title" hidden>
     <h2 id="victory-title">Na mira, em cheio!</h2>
     <p id="victory-summary"></p>
+  </section>
+
+  <section id="game-hints" class="hints block" aria-labelledby="hints-title" hidden>
+    <h2 id="hints-title">Precisa de uma dica?</h2>
+    <div class="hint-buttons">
+      <button id="nationality-hint-button" class="hint-button" type="button" aria-controls="nationality-hint" aria-expanded="false" disabled>
+        <strong>Nacionalidade</strong>
+        <span id="nationality-hint-status">Mais 10 tentativas para desbloquear</span>
+      </button>
+      <button id="team-hint-button" class="hint-button" type="button" aria-controls="team-hint" aria-expanded="false" disabled>
+        <strong>Time atual</strong>
+        <span id="team-hint-status">Mais 15 tentativas para desbloquear</span>
+      </button>
+    </div>
+    <div id="nationality-hint" class="hint-row" aria-live="polite" hidden>
+      <strong>Nacionalidade</strong>
+      <div id="nationality-hint-value"></div>
+    </div>
+    <div id="team-hint" class="hint-row" aria-live="polite" hidden>
+      <strong>Time atual</strong>
+      <span id="team-hint-value"></span>
+    </div>
   </section>
 
   <section class="block" aria-label="Tentativas">
@@ -113,6 +135,7 @@
   <div class="dialog-heading"><h2 id="help-title">Como jogar</h2><button id="help-close" type="button" aria-label="Fechar ajuda">×</button></div>
   <p>Acerte o profissional de Counter-Strike do dia. O desafio é o mesmo para todos e muda à meia-noite de <strong>America/Fortaleza</strong>. Você tem tentativas ilimitadas.</p>
   <p>Busque por nick ou nome, selecione uma sugestão e envie. Use ↑ e ↓ para navegar nas sugestões, Enter para selecionar e Escape para fechar.</p>
+  <p>Após 10 tentativas erradas, você desbloqueia a dica de nacionalidade. Após mais 5 erros (15 tentativas), desbloqueia a dica de time atual. Clique no botão liberado para ver a dica abaixo dele.</p>
   <dl>
     <dt>Jogador</dt>
     <dd>O acerto depende da identidade do jogador, mesmo quando dois nicks são iguais.</dd>
