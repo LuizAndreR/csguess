@@ -1,0 +1,85 @@
+{% extends "game/base.html" %}
+{% load static %}
+{% block title %}CSGuess — Logo{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'game/css/logo.css' %}?v=2">
+<script src="{% static 'game/js/logo.js' %}?v=1" defer></script>
+{% endblock %}
+{% block content %}
+<main
+  class="parts"
+  id="main"
+  data-state-url="{% url 'game:logo' %}"
+  data-search-url="{% url 'game:team-search' %}"
+  data-guess-url="{% url 'game:logo-guesses' %}"
+>
+  <section class="hero block" aria-labelledby="game-title">
+    <span class="eyebrow" id="challenge-label">DESAFIO DIÁRIO</span>
+    <h1 id="game-title">De quem é este logo?</h1>
+    <p class="sub">Adivinhe a equipe de Counter-Strike.<br>A cada 10 tentativas a imagem fica mais nítida.</p>
+    <div class="mode">LOGO</div>
+  </section>
+
+  <figure class="logo-stage block">
+    <img id="logo-image" width="480" height="300" alt="Logo da equipe do dia, desfocado" hidden>
+    <p id="logo-loading" class="logo-loading">Carregando…</p>
+    <figcaption id="blur-note" class="blur-note" role="status" aria-live="polite"></figcaption>
+  </figure>
+
+  <section class="searchblock block" aria-label="Escolha sua tentativa">
+    <form id="guess-form" class="searchline">
+      {% csrf_token %}
+      <label class="sr-only" for="team-search">Buscar equipe pelo nome</label>
+      <input
+        id="team-search"
+        type="text"
+        placeholder="Digite o nome da equipe…"
+        autocomplete="off"
+        maxlength="100"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded="false"
+        aria-controls="suggestions"
+        aria-describedby="search-feedback"
+        disabled
+      >
+      <button id="guess-submit" type="submit" disabled>Enviar ↵</button>
+    </form>
+    <ul id="suggestions" class="suggestions" role="listbox" aria-label="Equipes encontradas" hidden></ul>
+    <p id="search-feedback" class="feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <p id="game-message" class="game-message block" role="status" aria-live="polite">Carregando o desafio…</p>
+  <section id="victory" class="victory block" aria-labelledby="victory-title" hidden>
+    <h2 id="victory-title">Na mira, em cheio!</h2>
+    <p id="victory-summary"></p>
+  </section>
+
+  <section class="block" aria-label="Tentativas">
+    <ol id="guesses" class="guess-list" reversed></ol>
+    <p id="empty-board" class="empty-board">Escolha uma equipe para começar.</p>
+  </section>
+
+  <section class="legend block" aria-label="Legenda das tentativas">
+    <span><i class="swatch correct" aria-hidden="true"></span>
+    <span><i class="swatch incorrect" aria-hidden="true"></span>
+  </section>
+
+  <footer class="footer block">
+    <span>Próximo desafio em</span>
+    <strong id="countdown" role="timer" aria-label="Tempo até o próximo desafio">--:--:--</strong>
+    <span>Feito para quem vive Counter-Strike.</span>
+  </footer>
+
+  <noscript><p class="game-message">Ative o JavaScript para buscar equipes e enviar tentativas.</p></noscript>
+</main>
+{% endblock %}
+{% block dialogs %}
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <div class="dialog-heading"><h2 id="help-title">Como jogar</h2><button id="help-close" type="button" aria-label="Fechar ajuda">×</button></div>
+  <p>Descubra de qual equipe de Counter-Strike é o logo do dia. O desafio é o mesmo para todos e muda à meia-noite de <strong>America/Fortaleza</strong>. Você tem tentativas ilimitadas.</p>
+  <p>O logo começa bem desfocado e fica mais nítido a cada 10 tentativas. Digite o nome da equipe, selecione uma sugestão e envie. Use ↑ e ↓ para navegar nas sugestões, Enter para selecionar e Escape para fechar.</p>
+  <p>Tentativas erradas ficam em vermelho e a correta em verde. Suas tentativas ficam somente neste navegador; limpar os cookies apaga seu progresso.</p>
+  <p class="credits">Logos e marcas pertencem às respectivas equipes. Imagens obtidas da <a href="https://liquipedia.net/counterstrike/" target="_blank" rel="noopener noreferrer">Liquipedia</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>).</p>
+</dialog>
+{% endblock %}

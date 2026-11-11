@@ -3,8 +3,11 @@ import re
 import unicodedata
 
 
+NO_TEAM = "No team"
+
+
 def normalize_team(value):
-    return "No team" if value is None or (isinstance(value, str) and not value.strip()) else value
+    return NO_TEAM if value is None or (isinstance(value, str) and not value.strip()) else value
 
 
 # Busca sem acentos, maiúsculas ou separadores, tratando o e 0 como equivalentes.

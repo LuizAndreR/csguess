@@ -18,6 +18,10 @@
     <div class="screen">
       <header class="sitebar">
         <a class="logo" href="{% url 'game:home' %}" aria-label="CSGuess, início">CS<b>Guess</b><span>COUNTER-STRIKE DAILY</span></a>
+        <nav class="modes" aria-label="Modos de jogo">
+          <a href="{% url 'game:home' %}"{% if request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'classic-page' %} aria-current="page"{% endif %}>Clássico</a>
+          <a href="{% url 'game:logo-page' %}"{% if request.resolver_match.url_name == 'logo-page' %} aria-current="page"{% endif %}>Logo</a>
+        </nav>
         <button id="help-open" type="button" aria-label="Ajuda: como jogar" aria-haspopup="dialog">?</button>
       </header>
 

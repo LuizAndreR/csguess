@@ -183,9 +183,8 @@ def player_search(request):
     return JsonResponse({"players": [data for _, data in results[:10]]})
 
 
-@endpoint("POST")
-def guesses(request):
-    # Valida o formato da requisição antes de acessar a partida.
+# Valida o formato do POST de tentativa (compartilhado pelos modos Clássico e Logo).
+def parse_guess_body(request, field, code):
     if request.content_type != "application/json":
         raise APIError(
             "invalid_content_type",
@@ -200,13 +199,10 @@ def guesses(request):
     except (ValueError, UnicodeDecodeError):
         raise APIError("invalid_json", "Envie um objeto JSON válido.")
 
-    if not isinstance(body, dict) or set(body) != {"challenge_date", "player_id"}:
-        raise APIError("invalid_body", "Informe challenge_date e player_id.")
-    if type(body["player_id"]) is not int or not 0 < body["player_id"] < 2**63:
-        raise APIError(
-            "invalid_player",
-            "player_id deve ser um inteiro positivo válido."
-        )
+    if not isinstance(body, dict) or set(body) != {"challenge_date", field}:
+        raise APIError("invalid_body", f"Informe challenge_date e {field}.")
+    if type(body[field]) is not int or not 0 < body[field] < 2**63:
+        raise APIError(code, f"{field} deve ser um inteiro positivo válido.")
 
     value = body["challenge_date"]
     if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
@@ -220,9 +216,17 @@ def guesses(request):
     if submitted_date != local_date():
         raise APIError(
             "challenge_changed",
-            "O dia mudou. Carregue o novo desafio em /game/classic/.",
+            "O dia mudou. Carregue o novo desafio.",
             409
         )
+    return body[field], submitted_date
+
+
+@endpoint("POST")
+def guesses(request):
+    # Valida o formato da requisição antes de acessar a partida.
+    player_id, submitted_date = parse_guess_body(request, "player_id", "invalid_player")
+    body = {"player_id": player_id}
 
     challenge = current_challenge()
     players = read_progress(request, challenge)
