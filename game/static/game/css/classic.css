@@ -211,6 +211,20 @@ h1 {
 }
 
 /* Identificação dos jogadores e tabela de tentativas. */
+.team-identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px
+}
+
+.team-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0
+}
+
 .portrait {
   width: 42px;
   height: 48px;

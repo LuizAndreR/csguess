@@ -15,7 +15,7 @@ da equipe secreta antes da vitória, e a URL da imagem não contém o ID da equi
 
 ## Logos locais
 
-`Team.photo_url` guarda o link de origem (Liquipedia). Para o jogo, os arquivos são baixados
+`Team.photo_url` guarda o link de origem da imagem. Para o jogo, os arquivos são baixados
 uma vez e reduzidos (lado maior de 600 px) em `game/team_logos/<hash da URL>.png`, fora de `static/`
 para não ficarem públicos (o nome do arquivo original revelaria a equipe).
 
@@ -23,6 +23,17 @@ para não ficarem públicos (o nome do arquivo original revelaria a equipe).
 python manage.py fetch_team_logos           # baixa os que faltam (1 s entre downloads)
 python manage.py fetch_team_logos --force   # refaz todos
 ```
+
+Quando `photo_url` está vazio, o comando procura o nome da equipe (sem distinguir
+maiúsculas/minúsculas) no catálogo versionado `game/data/team_logos.json`. Cada entrada
+registra a URL da imagem e a página da equipe usada para conferir a associação. A URL
+só é salva no banco depois que o PNG local estiver disponível. URLs já cadastradas são
+preservadas, inclusive com `--force`. Equipes desconhecidas são reportadas sem receber
+imagens de outros times; para incluí-las, cadastre a URL no admin ou adicione uma entrada
+ao catálogo. Falhas de download são reportadas e o comando termina com erro.
+Depois de importar equipes em um container já iniciado, execute
+`docker compose exec web python manage.py fetch_team_logos` e então
+`docker compose exec web python manage.py ensure_daily_challenge`.
 
 Só participam do sorteio e da busca as equipes com `photo_url` preenchido **e** arquivo local.
 Ao cadastrar uma equipe nova ou trocar a foto, rode o comando (use `--force` para substituir).
@@ -53,6 +64,7 @@ Erros seguem o formato do clássico (`session_required`, `duplicate_guess`, `mat
 
 ## Créditos
 
-Logos e marcas pertencem às respectivas equipes; as imagens vêm da
-[Liquipedia](https://liquipedia.net/counterstrike/) ([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)).
+Logos e marcas pertencem às respectivas equipes. O catálogo inicial usa imagens do
+[BO3](https://bo3.gg/teams), com a página de origem de cada equipe registrada no catálogo.
+URLs cadastradas manualmente podem usar outras fontes.
 O crédito aparece na ajuda da tela.

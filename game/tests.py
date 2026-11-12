@@ -122,7 +122,7 @@ class HomeTests(SimpleTestCase):
         self.assertContains(response, "Quem está na sua mira?")
         self.assertContains(response, "/static/game/css/classic.css")
         self.assertContains(response, "/static/game/js/classic.js")
-        self.assertContains(response, 'class="mode-button" href="/logo/"')
+        self.assertContains(response, '<a href="/logo/">Logo</a>', html=True)
 
 
 # ---------------------------------------------------------------------------

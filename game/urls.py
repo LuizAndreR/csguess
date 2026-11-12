@@ -14,6 +14,7 @@ urlpatterns = [
     # Rotas JSON consumidas pelo JavaScript da tela.
     path("game/classic/", views.classic, name="classic"),
     path("game/classic/guesses/", views.guesses, name="guesses"),
+    path("game/classic/players/<int:player_id>/team-logo/", views.classic_team_logo, name="classic-team-logo"),
     path("game/players/search/", views.player_search, name="player-search"),
 
     # Modo Logo.

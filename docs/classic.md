@@ -69,6 +69,13 @@ Para trocar um jogador de time, edite o campo Equipe no Admin (ou reimporte); n�
 necessário apagar equipes. Equipes com jogadores não podem ser removidas.
 Como no Django, operações bulk/update ignoram validadores; devem validar antes.
 
+Nas tentativas, `player.team_logo_url` aponta para
+`GET /game/classic/players/<player_id>/team-logo/`. A rota entrega o PNG local da
+equipe relacionada somente quando o jogador já foi tentado no cookie assinado do
+Clássico. O logo aparece ao lado do nome da equipe, inclusive ao restaurar tentativas.
+Sem equipe, URL ou arquivo local, o nome continua visível; o navegador oculta imagens
+que não carregam. O cache da imagem é desativado, como nas demais rotas do jogo.
+
 ## Progresso somente no navegador e CSRF
 
 O progresso do clássico fica exclusivamente no cookie `csguess_classic_progress`

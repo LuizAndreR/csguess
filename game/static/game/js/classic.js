@@ -93,6 +93,21 @@
     return group;
   }
 
+  function teamIdentity(player) {
+    const group = element("div", "team-identity");
+    if (player.team_logo_url) {
+      const logo = element("img", "team-logo");
+      logo.alt = "";
+      logo.width = 26;
+      logo.height = 26;
+      logo.addEventListener("error", () => logo.remove(), { once: true });
+      logo.src = imageURL(player.team_logo_url);
+      group.append(logo);
+    }
+    group.append(element("span", null, player.current_team || "No team"));
+    return group;
+  }
+
   function resultCell(result, content, className = "") {
     const cell = element("td", `${className} ${statuses[result] ? result : ""}`.trim());
     cell.append(content, accessible(`. ${statuses[result] || ""}.`));
@@ -174,8 +189,7 @@
       resultCell(comparison.nationalities, countries(player.nationalities)),
       resultCell(comparison.career_status, element("span", null, career[player.career_status] ||
         player.career_status)),
-      resultCell(comparison.current_team, element("span", null, player.current_team ||
-        "No team")),
+      resultCell(comparison.current_team, teamIdentity(player)),
       resultCell(comparison.roles, roles(player.roles)),
       resultCell(comparison.is_major_winner, element("span", null, player.is_major_winner ?
         "🏆 Sim" : "Não")),

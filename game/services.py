@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import DailyChallenge, Player
@@ -73,6 +74,10 @@ def player_snapshot(player):
         "nationalities": sorted(code.upper() for code in player.nationalities),
         "career_status": player.career_status,
         "current_team": team,
+        "team_logo_url": (
+            reverse("game:classic-team-logo", args=[player.pk])
+            if player.team_id and player.team.photo_url else ""
+        ),
         "roles": sorted(player.roles),
         "is_major_winner": player.is_major_winner,
         "years_active": player.years_active

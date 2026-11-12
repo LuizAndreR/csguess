@@ -6,7 +6,7 @@ import logging
 import re
 
 from django.db import DatabaseError, connection
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.cache import patch_vary_headers
 
@@ -147,6 +147,22 @@ def classic(request):
     if initialize:
         write_progress(response, request, challenge, [])
     return response
+
+
+@endpoint("GET")
+def classic_team_logo(request, player_id):
+    from .logo import logo_path
+
+    challenge = current_challenge()
+    if player_id not in (read_progress(request, challenge) or []):
+        raise APIError("logo_unavailable", "Logo indisponível.", 404)
+    player = Player.objects.select_related("team").filter(pk=player_id).first()
+    if player is None or player.team is None or not player.team.photo_url:
+        raise APIError("logo_unavailable", "Logo indisponível.", 404)
+    try:
+        return FileResponse(logo_path(player.team).open("rb"), content_type="image/png")
+    except OSError:
+        raise APIError("logo_unavailable", "Logo indisponível.", 404)
 
 
 @endpoint("GET")
