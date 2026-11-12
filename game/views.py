@@ -13,7 +13,7 @@ from django.utils.cache import patch_vary_headers
 from .models import DailyChallenge, Player
 from .progress import read_progress, write_progress
 from .normalization import search_key
-from .services import compare, eligible_players, local_date, next_rollover
+from .services import available_hints, compare, eligible_players, local_date, next_rollover
 
 
 def health(request):
@@ -139,6 +139,10 @@ def classic(request):
     if summary:
         payload["victory"] = summary
 
+    hints = available_hints(challenge, players)
+    if hints:
+        payload["hints"] = hints
+
     response = JsonResponse(payload)
     if initialize:
         write_progress(response, request, challenge, [])
@@ -262,6 +266,10 @@ def guesses(request):
     summary = victory(challenge, players)
     if summary:
         result["victory"] = summary
+
+    hints = available_hints(challenge, players)
+    if hints:
+        result["hints"] = hints
 
     response = JsonResponse(result, status=201)
     return write_progress(response, request, challenge, players)

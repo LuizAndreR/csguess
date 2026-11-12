@@ -31,6 +31,20 @@ def next_rollover(date):
     return datetime.combine(date + timedelta(days=1), time.min, GAME_TZ).isoformat()
 
 
+def available_hints(challenge, players):
+    # Só contam tentativas aceitas no cookie assinado; um acerto encerra as dicas.
+    if challenge.secret_player_id in players:
+        return {}
+
+    hints = {}
+    if len(players) >= 10:
+        hints["nationalities"] = challenge.secret_snapshot["nationalities"]
+    if len(players) >= 15:
+        hints["current_team"] = normalize_team(challenge.secret_snapshot["current_team"])
+
+    return hints
+
+
 # Valida e prepara os dados do jogador, sem modificar o cadastro.
 def player_snapshot(player):
     validate_nationalities(player.nationalities)

@@ -50,7 +50,8 @@ promete pistas imutáveis se houver edição de jogadores durante uma partida.
 
 Somente o jogador secreto mantém uma cópia de suas características no campo
 `secret_snapshot` de `game_dailychallenge`. Essa cópia não exige outra tabela e
-preserva a resposta do desafio já sorteado. Ela fica no servidor até o acerto.
+preserva a resposta do desafio já sorteado. Antes do acerto, somente as dicas
+desbloqueadas de nacionalidade e time podem ser retornadas, nos limites abaixo.
 A migração 0006 não altera esse campo, os jogadores, os desafios, o histórico de
 sorteios ou o cookie de progresso. Não há alteração no bloqueio de sete dias.
 
@@ -124,7 +125,38 @@ IDs e dados abaixo são exemplos ilustrativos.
 
 `guesses` contém as respostas anteriores, em ordem de tentativa. Após acertar,
 `state` passa a `completed` e `victory` contém o snapshot público do jogador e
-`attempts`. Não há secreto, ID secreto ou atributos dele antes do acerto.
+`attempts`. Antes do acerto, a resposta não inclui a identidade secreta; somente
+as dicas desbloqueadas podem revelar nacionalidade e time.
+
+### Dicas após 10 e 15 erros
+
+Somente tentativas válidas e diferentes, aceitas no cookie assinado, contam.
+Após 10 erros, GET do estado e POST de tentativa passam a incluir:
+
+```json
+{"hints": {"nationalities": ["BR"]}}
+```
+
+Após 15 erros, o mesmo campo inclui também o time:
+
+```json
+{"hints": {"nationalities": ["BR"], "current_team": "No team"}}
+```
+
+São exemplos fictícios. Os valores vêm de `DailyChallenge.secret_snapshot`,
+salvo no PostgreSQL no sorteio, mantendo a mesma resposta usada nas comparações.
+Antes de cada limite, a respectiva dica não é enviada. Busca e HTML não contêm
+esses valores. No acerto, retorna-se `victory` e omite-se `hints`.
+
+A tela mostra dois botões desde o início. Botões bloqueados têm aparência
+apagada e informam quantas tentativas faltam. Após a liberação pelo servidor,
+o usuário pode clicar para revelar ou ocultar cada dica abaixo dos botões.
+Recarregar preserva o desbloqueio pelo cookie, mas pede um novo clique para
+mostrar os valores. Outro navegador ou novo desafio começa com dicas bloqueadas.
+Não há tabelas novas nem gravação de tentativas no banco.
+
+A interação foi inspirada nos botões de dicas do
+[Onepiecedle clássico](https://onepiecedle.net/classic), adaptada ao CSGuess.
 
 ### GET /game/players/search/?q=...
 
@@ -265,8 +297,10 @@ a instalação/ativação no gerenciador de serviços do host é uma etapa opera
 .venv/bin/python manage.py test --noinput
 ```
 
-A suíte usa PostgreSQL real e banco de teste separado. Inclui concorrência real
-do sorteio com conexões independentes, isolamento entre navegadores, assinatura do
-cookie, ausência de gravações de tentativas, uso direto de Player, virada, bloqueio simétrico, snapshot secreto,
-validação de entrada, CSRF, busca e proteção da resposta. Não usar SQLite como substituto para
-esses testes de locks. Não modificar jogadores reais para criar fixtures.
+A suíte usa PostgreSQL real e banco de teste separado. Cobre validação e
+persistência de Player e, para dicas, limites de 10/15 erros, tentativas inválidas
+ou repetidas, isolamento entre navegadores, vitória, novo dia e proteção dos
+valores antes da liberação. O teste opcional `game.test_hints_browser` cobre os
+botões bloqueados, contagem, clique e teclado para revelar/ocultar, recarga e
+visual desktop/celular. Veja como ativá-lo no README. Não modificar jogadores
+reais para criar fixtures.
